@@ -5,7 +5,7 @@
 <body>
 <div x-data>
     <template x-if="config">
-        <div>
+        <div class="agentmemory-settings">
             <div class="section-title">AgentMemory</div>
             <div class="section-description">
                 Persistent memory through a separately running AgentMemory server.
@@ -92,5 +92,10 @@
         </div>
     </template>
 </div>
+<style>
+    .agentmemory-settings .field-control input {
+        width: min(24rem, 100%);
+    }
+</style>
 </body>
 </html>
