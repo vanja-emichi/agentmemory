@@ -1,0 +1,198 @@
+from __future__ import annotations
+
+import asyncio
+import json
+import os
+import urllib.error
+import urllib.parse
+import urllib.request
+from datetime import datetime, timezone
+from typing import Any
+
+from helpers import plugins, projects, settings as a0_settings
+
+
+PLUGIN_NAME = "agentmemory"
+SESSION_ID_KEY = "agentmemory_session_id"
+MAX_ERROR_LENGTH = 240
+
+
+class AgentMemoryError(RuntimeError):
+    pass
+
+
+def get_config(agent: Any) -> dict[str, Any]:
+    raw = plugins.get_plugin_config(PLUGIN_NAME, agent=agent, caller="agent") or {}
+    return {
+        "enabled": _as_bool(raw.get("enabled", True), True),
+        "url": os.getenv("AGENTMEMORY_URL") or str(raw.get("url") or _default_url()),
+        "secret": os.getenv("AGENTMEMORY_SECRET") or str(raw.get("secret") or ""),
+        "agent_id": os.getenv("AGENTMEMORY_AGENT_ID") or str(raw.get("agent_id") or ""),
+        "auto_recall": _as_bool(raw.get("auto_recall", True), True),
+        "auto_capture": _as_bool(raw.get("auto_capture", True), True),
+        "recall_budget": max(1, _as_int(raw.get("recall_budget", 1500), 1500)),
+    }
+
+
+def _default_url() -> str:
+    return "http://host.docker.internal:3111" if os.path.exists("/.dockerenv") else "http://localhost:3111"
+
+
+def get_scope(agent: Any) -> tuple[str, str]:
+    project_name = projects.get_context_project_name(agent.context)
+    if project_name:
+        cwd = projects.get_project_folder(project_name)
+    else:
+        cwd = a0_settings.get_settings()["workdir_path"]
+        project_name = os.path.basename(os.path.abspath(cwd)) or "agent-zero"
+    return project_name, os.path.abspath(cwd)
+
+
+def get_session_id(agent: Any) -> str:
+    return str(agent.get_data(SESSION_ID_KEY) or agent.context.id)
+
+
+async def start_session(agent: Any, title: str = "") -> dict[str, Any]:
+    config = get_config(agent)
+    project, cwd = get_scope(agent)
+    payload: dict[str, Any] = {
+        "sessionId": get_session_id(agent),
+        "project": project,
+        "cwd": cwd,
+    }
+    if title.strip():
+        payload["title"] = title.strip()[:200]
+    if config["agent_id"].strip():
+        payload["agentId"] = config["agent_id"].strip()
+    return await request(agent, "/agentmemory/session/start", payload, timeout=2)
+
+
+async def end_session(agent: Any) -> dict[str, Any]:
+    return await request(
+        agent,
+        "/agentmemory/session/end",
+        {"sessionId": get_session_id(agent)},
+        timeout=2,
+    )
+
+
+async def observe(agent: Any, hook_type: str, data: Any) -> dict[str, Any]:
+    project, cwd = get_scope(agent)
+    payload: dict[str, Any] = {
+        "hookType": hook_type,
+        "sessionId": get_session_id(agent),
+        "project": project,
+        "cwd": cwd,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "data": data,
+    }
+    if get_config(agent)["agent_id"].strip():
+        payload["agentId"] = get_config(agent)["agent_id"].strip()
+    return await request(agent, "/agentmemory/observe", payload, timeout=2)
+
+
+async def search(agent: Any, query: str, limit: int = 10) -> dict[str, Any]:
+    project, cwd = get_scope(agent)
+    payload: dict[str, Any] = {
+        "query": query,
+        "limit": max(1, min(100, int(limit))),
+        "project": project,
+        "cwd": cwd,
+        "format": "full",
+    }
+    if get_config(agent)["agent_id"].strip():
+        payload["agentId"] = get_config(agent)["agent_id"].strip()
+    return await request(agent, "/agentmemory/search", payload, timeout=10)
+
+
+async def remember(
+    agent: Any,
+    content: str,
+    memory_type: str = "fact",
+    concepts: list[str] | None = None,
+    files: list[str] | None = None,
+) -> dict[str, Any]:
+    project, _ = get_scope(agent)
+    payload: dict[str, Any] = {
+        "content": content,
+        "type": memory_type or "fact",
+        "concepts": concepts or [],
+        "files": files or [],
+        "project": project,
+    }
+    if get_config(agent)["agent_id"].strip():
+        payload["agentId"] = get_config(agent)["agent_id"].strip()
+    return await request(agent, "/agentmemory/remember", payload, timeout=10)
+
+
+async def health(agent: Any) -> dict[str, Any]:
+    return await request(agent, "/agentmemory/health", method="GET", timeout=3)
+
+
+async def request(
+    agent: Any,
+    path: str,
+    payload: dict[str, Any] | None = None,
+    *,
+    method: str = "POST",
+    timeout: float,
+) -> dict[str, Any]:
+    config = get_config(agent)
+    url = f"{config['url'].rstrip('/')}/{path.lstrip('/')}"
+    parsed = urllib.parse.urlparse(url)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        raise AgentMemoryError("AgentMemory URL must be an HTTP or HTTPS URL")
+
+    headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "X-Agentmemory-Source": "agent-zero",
+    }
+    if config["secret"]:
+        headers["Authorization"] = f"Bearer {config['secret']}"
+
+    body = json.dumps(payload).encode("utf-8") if payload is not None else None
+    return await asyncio.to_thread(_request, url, method, headers, body, timeout)
+
+
+def _request(
+    url: str,
+    method: str,
+    headers: dict[str, str],
+    body: bytes | None,
+    timeout: float,
+) -> dict[str, Any]:
+    request = urllib.request.Request(url, data=body, headers=headers, method=method)
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            raw = response.read().decode("utf-8")
+    except urllib.error.HTTPError as error:
+        detail = error.read().decode("utf-8", errors="replace").strip()
+        raise AgentMemoryError(
+            f"AgentMemory HTTP {error.code}: {detail[:MAX_ERROR_LENGTH]}"
+        ) from None
+    except (urllib.error.URLError, TimeoutError, OSError) as error:
+        raise AgentMemoryError(f"AgentMemory unavailable: {error}") from None
+
+    try:
+        value = json.loads(raw)
+    except json.JSONDecodeError:
+        raise AgentMemoryError("AgentMemory returned invalid JSON") from None
+    if not isinstance(value, dict):
+        raise AgentMemoryError("AgentMemory returned an unexpected response")
+    return value
+
+
+def _as_bool(value: Any, default: bool) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() not in {"0", "false", "no", "off"}
+    return default if value is None else bool(value)
+
+
+def _as_int(value: Any, default: int) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default

@@ -1,0 +1,96 @@
+<html>
+<head>
+    <title>AgentMemory Settings</title>
+</head>
+<body>
+<div x-data>
+    <template x-if="config">
+        <div>
+            <div class="section-title">AgentMemory</div>
+            <div class="section-description">
+                Persistent memory through a separately running AgentMemory server.
+            </div>
+
+            <div class="field">
+                <div class="field-label">
+                    <div class="field-title">Server URL</div>
+                    <div class="field-description">The AgentMemory REST API endpoint.</div>
+                </div>
+                <div class="field-control">
+                    <input type="url" x-model="config.url" placeholder="http://host.docker.internal:3111" />
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="field-label">
+                    <div class="field-title">Bearer secret</div>
+                    <div class="field-description">Optional when AgentMemory authentication is enabled.</div>
+                </div>
+                <div class="field-control">
+                    <input type="password" x-model="config.secret" autocomplete="off" />
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="field-label">
+                    <div class="field-title">Agent ID</div>
+                    <div class="field-description">Optional identity for shared or isolated AgentMemory scopes.</div>
+                </div>
+                <div class="field-control">
+                    <input type="text" x-model="config.agent_id" placeholder="optional" />
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="field-label">
+                    <div class="field-title">Enable plugin</div>
+                    <div class="field-description">Connect Agent Zero to AgentMemory.</div>
+                </div>
+                <div class="field-control">
+                    <label class="toggle">
+                        <input type="checkbox" x-model="config.enabled" />
+                        <span class="toggler"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="field-label">
+                    <div class="field-title">Inject recalled context</div>
+                    <div class="field-description">Add relevant historical context at the start of each turn.</div>
+                </div>
+                <div class="field-control">
+                    <label class="toggle">
+                        <input type="checkbox" x-model="config.auto_recall" />
+                        <span class="toggler"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="field-label">
+                    <div class="field-title">Capture prompts and tool results</div>
+                    <div class="field-description">Record the current turn for future recall.</div>
+                </div>
+                <div class="field-control">
+                    <label class="toggle">
+                        <input type="checkbox" x-model="config.auto_capture" />
+                        <span class="toggler"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="field-label">
+                    <div class="field-title">Recall budget</div>
+                    <div class="field-description">Maximum AgentMemory context size per turn.</div>
+                </div>
+                <div class="field-control">
+                    <input type="number" min="1" x-model.number="config.recall_budget" />
+                </div>
+            </div>
+        </div>
+    </template>
+</div>
+</body>
+</html>
