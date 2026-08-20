@@ -25,7 +25,7 @@ Adds a **Memory** surface to the right canvas (next to Files / Editor / Factory 
 - recent captured sessions with observation counts
 - read-only by design: the proxy whitelists `health`, `memories`, `sessions`, `observations` (GET) and `search` (POST); all write endpoints return 403
 
-Panel files: `extensions/webui/right-canvas-panels/agentmemory-panel.html`, `extensions/webui/right_canvas_register_surfaces/register-agentmemory.js`, `extensions/webui/surfaces_register/register-agentmemory.js`, modal fallback `webui/main.html` + standalone `webui/panel.html`, backend proxy `api/proxy.py`. The proxy target follows the plugin `url` setting (or `AGENTMEMORY_URL` env). Requires the AgentMemory server to be running.
+Panel files: `extensions/webui/right-canvas-panels/agentmemory-panel.html`, `extensions/webui/right_canvas_register_surfaces/register-agentmemory.js`, modal fallback `webui/main.html` + standalone `webui/panel.html`, backend proxy `api/proxy.py`. The proxy target follows the plugin `url` setting (or `AGENTMEMORY_URL` env). Requires the AgentMemory server to be running.
 
 ## Auto-start server
 
