@@ -82,6 +82,19 @@
 
             <div class="field">
                 <div class="field-label">
+                    <div class="field-title">Auto-start server</div>
+                    <div class="field-description">Launch the container-local AgentMemory server automatically at framework boot and revive it if it dies.</div>
+                </div>
+                <div class="field-control">
+                    <label class="toggle">
+                        <input type="checkbox" x-model="config.auto_start" />
+                        <span class="toggler"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="field-label">
                     <div class="field-title">Recall budget</div>
                     <div class="field-description">Maximum AgentMemory context size per turn.</div>
                 </div>

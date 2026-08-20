@@ -20,6 +20,17 @@ class AgentMemorySession(Extension):
             f"{self.agent.context.id}:{session_number}",
         )
 
+        if not self.agent.get_data("agentmemory_boot_started"):
+            self.agent.set_data("agentmemory_boot_started", True)
+            import threading
+            from usr.plugins.agentmemory.helpers import server_manager
+            threading.Thread(
+                target=server_manager.ensure_server,
+                args=(self.agent,),
+                name="a0-agentmemory-server-heal",
+                daemon=True,
+            ).start()
+
         title = loop_data.user_message.output_text() if loop_data.user_message else ""
         try:
             result = await client.start_session(self.agent, title)

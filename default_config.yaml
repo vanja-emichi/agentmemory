@@ -4,4 +4,5 @@ secret: ""
 agent_id: ""
 auto_recall: true
 auto_capture: true
+auto_start: true
 recall_budget: 1500
