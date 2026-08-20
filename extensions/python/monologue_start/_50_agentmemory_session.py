@@ -39,6 +39,28 @@ class AgentMemorySession(Extension):
                     "agent.extras.agentmemory_context.md",
                     context=result["context"],
                 )
+                # Surface pending cross-session work so the agent can
+                # proactively propose continuing it (propose, never start
+                # work without user confirmation).
+                try:
+                    frontier = await client.frontier(self.agent, limit=5)
+                    entries = frontier.get("frontier") or []
+                    if entries:
+                        lines = ["## AgentMemory pending actions (frontier)"]
+                        lines.append(
+                            "Open cross-session work items exist. Mention the "
+                            "most relevant ones when proposing next steps; "
+                            "propose, do not start them without user approval."
+                        )
+                        for entry in entries:
+                            action = entry.get("action") or {}
+                            lines.append(
+                                f"- p{action.get('priority', '?')} "
+                                f"{action.get('title', '?')} (id: {action.get('id', '?')})"
+                            )
+                        loop_data.extras_temporary["agentmemory_actions"] = "\n".join(lines)
+                except Exception:
+                    pass
             if config["auto_capture"] and title.strip():
                 await client.observe(
                     self.agent,

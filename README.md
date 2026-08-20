@@ -36,3 +36,11 @@ When `auto_start` is enabled (default) and the configured URL points at this con
 - The server is spawned detached (`start_new_session=True`) and writes to `<workdir>/agentmemory.log`.
 
 Remote URLs are never spawned — auto-start only manages a container-local server. Data persists in `<workdir>/data/`, so memories and sessions survive restarts.
+
+## Actions tool (proactive proposals)
+
+`agentmemory_actions` gives the agent first-class management of AgentMemory action items (cross-session work with priority, status, dependencies):
+
+- `create` / `list` / `update` / `frontier` / `next` operations, mirroring upstream's `memory_action_create`/`memory_action_update`/`memory_frontier`/`memory_next` MCP tools
+- **Propose-then-confirm etiquette** baked into the tool prompt: the agent proactively proposes action-worthy follow-ups at natural moments (completed work, TODOs, user-stated plans) and only creates them after user approval
+- When `auto_recall` is on and pending actions exist, the session-start context injection surfaces the frontier (top 5) so the agent can propose continuing open work in any future chat

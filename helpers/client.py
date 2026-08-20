@@ -125,6 +125,72 @@ async def remember(
     return await request(agent, "/agentmemory/remember", payload, timeout=10)
 
 
+async def actions_list(agent: Any, status: str = "", limit: int = 20) -> dict[str, Any]:
+    """List actions, optionally filtered by status."""
+    params = [f"limit={limit}"]
+    if status:
+        params.append(f"status={status}")
+    return await request(
+        agent, f"/agentmemory/actions?{'&'.join(params)}", method="GET", timeout=10
+    )
+
+
+async def action_create(
+    agent: Any,
+    title: str,
+    description: str = "",
+    priority: int = 5,
+    tags: list | None = None,
+    parent_id: str = "",
+    requires: list | None = None,
+) -> dict[str, Any]:
+    """Create an action item (mirrors upstream memory_action_create)."""
+    payload = {
+        "title": title,
+        "description": description,
+        "priority": priority,
+        "project": get_scope(agent)[0],
+        "createdBy": f"a0-agent-{getattr(agent, 'number', 0)}",
+    }
+    if tags:
+        payload["tags"] = tags
+    if parent_id:
+        payload["parentId"] = parent_id
+    if requires:
+        payload["requires"] = requires
+    return await request(agent, "/agentmemory/actions", payload, timeout=15)
+
+
+async def action_update(
+    agent: Any,
+    action_id: str,
+    status: str = "",
+    result: str = "",
+    priority: int | None = None,
+) -> dict[str, Any]:
+    """Update an action (mirrors upstream memory_action_update)."""
+    payload: dict = {"actionId": action_id}
+    if status:
+        payload["status"] = status
+    if result:
+        payload["result"] = result
+    if priority is not None:
+        payload["priority"] = priority
+    return await request(agent, "/agentmemory/actions/update", payload, timeout=15)
+
+
+async def frontier(agent: Any, limit: int = 10) -> dict[str, Any]:
+    """Unblocked actions ranked by priority (mirrors memory_frontier)."""
+    return await request(
+        agent, f"/agentmemory/frontier?limit={limit}", method="GET", timeout=10
+    )
+
+
+async def next_action(agent: Any) -> dict[str, Any]:
+    """Single most important next action (mirrors memory_next)."""
+    return await request(agent, "/agentmemory/next", method="GET", timeout=10)
+
+
 async def health(agent: Any) -> dict[str, Any]:
     return await request(agent, "/agentmemory/health", method="GET", timeout=3)
 
