@@ -394,6 +394,17 @@ async def routine_run(agent: Any, routine_id: str, initiated_by: str = "") -> di
     return await request(agent, "/agentmemory/routines/run", payload, timeout=30)
 
 
+async def sketch_list(agent: Any, limit: int = 50) -> dict[str, Any]:
+    return await request(agent, f"/agentmemory/sketches?limit={int(limit)}", method="GET", timeout=15)
+
+
+async def sketch_create(agent: Any, title: str, description: str = "") -> dict[str, Any]:
+    payload: dict[str, Any] = {"title": title}
+    if description:
+        payload["description"] = description
+    return await request(agent, "/agentmemory/sketches", payload, timeout=15)
+
+
 async def insights_search(agent: Any, query: str, limit: int = 10) -> dict[str, Any]:
     """Search insights (mirrors memory_insight_search)."""
     payload = {"query": query, "limit": limit}
