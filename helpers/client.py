@@ -466,6 +466,17 @@ async def health(agent: Any) -> dict[str, Any]:
     return await request(agent, "/agentmemory/health", method="GET", timeout=3)
 
 
+async def audit_list(agent: Any, limit: int = 50, action_id: str = "") -> dict[str, Any]:
+    query = f"limit={int(limit)}"
+    if action_id:
+        query += f"&actionId={urllib.parse.quote(action_id)}"
+    return await request(agent, f"/agentmemory/audit?{query}", method="GET", timeout=15)
+
+
+async def export_state(agent: Any) -> dict[str, Any]:
+    return await request(agent, "/agentmemory/export", method="GET", timeout=90)
+
+
 async def request(
     agent: Any,
     path: str,
