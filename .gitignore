@@ -1,4 +1,10 @@
 __pycache__/
-*.py[cod]
-.toggle-*
+*.pyc
+*.pyo
+.toggle-1
+.toggle-0
+.DS_Store
+
+# runtime state (never commit)
 config.json
+execute_record.json
