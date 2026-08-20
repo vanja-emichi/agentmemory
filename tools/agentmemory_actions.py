@@ -6,6 +6,7 @@ from usr.plugins.agentmemory.helpers.client import (
     action_create,
     action_update,
     actions_list,
+    crystallize,
     frontier,
     next_action,
 )
@@ -23,6 +24,7 @@ class AgentMemoryActions(Tool):
             "update": self._update,
             "frontier": self._frontier,
             "next": self._next,
+            "crystallize": self._crystallize,
         }
         handler = handlers.get(operation)
         if not handler:
@@ -145,6 +147,28 @@ class AgentMemoryActions(Tool):
             json.dumps(suggestion, indent=2, ensure_ascii=False),
             break_loop=False,
         )
+
+    async def _crystallize(self, action_ids="", session_id="", **kwargs):
+        ids = _csv(action_ids)
+        if not ids:
+            return Response(
+                "Error: action_ids is required (comma-separated list of "
+                "completed action ids)",
+                break_loop=False,
+            )
+        try:
+            result = await crystallize(self.agent, ids, str(session_id or ""))
+        except AgentMemoryError as error:
+            return Response(f"AgentMemory crystallize failed: {error}", break_loop=False)
+        crystal = result.get("crystal") or {}
+        lessons = result.get("lessons") or []
+        lines = [
+            f"Crystal created: {crystal.get('id', '?')}",
+            f"Outcomes: {len(crystal.get('keyOutcomes', []))}, "
+            f"files affected: {len(crystal.get('filesAffected', []))}",
+            f"Lessons generated: {len(lessons)}",
+        ]
+        return Response("\n".join(lines), break_loop=False)
 
 
 def _csv(value):

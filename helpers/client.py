@@ -191,6 +191,140 @@ async def next_action(agent: Any) -> dict[str, Any]:
     return await request(agent, "/agentmemory/next", method="GET", timeout=10)
 
 
+# ---------------------------------------------------------------- slots
+
+
+async def slots_list(agent: Any) -> dict[str, Any]:
+    """List all memory slots (mirrors memory_slot_list)."""
+    return await request(agent, "/agentmemory/slots", method="GET", timeout=10)
+
+
+async def slot_get(agent: Any, label: str) -> dict[str, Any]:
+    """Read one slot by label (mirrors memory_slot_get)."""
+    return await request(
+        agent, f"/agentmemory/slot?label={urllib.parse.quote(label)}", method="GET", timeout=10
+    )
+
+
+async def slot_create(
+    agent: Any,
+    label: str,
+    content: str = "",
+    size_limit: int = 2000,
+    description: str = "",
+    pinned: bool = False,
+) -> dict[str, Any]:
+    """Create a new slot (mirrors memory_slot_create)."""
+    payload = {
+        "label": label,
+        "content": content,
+        "sizeLimit": size_limit,
+        "description": description,
+        "pinned": pinned,
+        "scope": get_scope(agent)[0],
+    }
+    return await request(agent, "/agentmemory/slot", payload, timeout=15)
+
+
+async def slot_append(agent: Any, label: str, text: str) -> dict[str, Any]:
+    """Append text to a slot (mirrors memory_slot_append)."""
+    payload = {"label": label, "text": text, "scope": get_scope(agent)[0]}
+    return await request(agent, "/agentmemory/slot/append", payload, timeout=15)
+
+
+async def slot_replace(agent: Any, label: str, text: str) -> dict[str, Any]:
+    """Replace slot content (mirrors memory_slot_replace)."""
+    payload = {"label": label, "text": text, "scope": get_scope(agent)[0]}
+    return await request(agent, "/agentmemory/slot/replace", payload, timeout=15)
+
+
+# --------------------------------------------------------------- lessons
+
+
+async def lesson_save(
+    agent: Any, content: str, context: str = "", confidence: float = 0.6
+) -> dict[str, Any]:
+    """Save a lesson (mirrors memory_lesson_save)."""
+    payload = {
+        "content": content,
+        "context": context,
+        "confidence": confidence,
+        "project": get_scope(agent)[0],
+    }
+    return await request(agent, "/agentmemory/lessons", payload, timeout=15)
+
+
+async def lesson_search(agent: Any, query: str, limit: int = 10) -> dict[str, Any]:
+    """Search lessons (mirrors memory_lesson_recall)."""
+    payload = {"query": query, "limit": limit}
+    return await request(agent, "/agentmemory/lessons/search", payload, timeout=15)
+
+
+async def lesson_delete(agent: Any, lesson_id: str) -> dict[str, Any]:
+    """Soft-delete a lesson (mirrors memory_lesson_delete)."""
+    return await request(agent, "/agentmemory/lessons/delete", {"lessonId": lesson_id}, timeout=15)
+
+
+# ------------------------------------------------------------ crystallize
+
+
+async def crystallize(
+    agent: Any, action_ids: list[str], session_id: str = ""
+) -> dict[str, Any]:
+    """Crystallize completed action chains (mirrors memory_crystallize)."""
+    payload = {"actionIds": action_ids, "project": get_scope(agent)[0]}
+    if session_id:
+        payload["sessionId"] = session_id
+    return await request(agent, "/agentmemory/crystals/create", payload, timeout=90)
+
+
+# ------------------------------------------------------------- deep lookups
+
+
+async def smart_search(
+    agent: Any, query: str, mode: str = "compact", limit: int = 10
+) -> dict[str, Any]:
+    """Hybrid semantic+keyword search (mirrors memory_smart_search)."""
+    payload = {"query": query, "mode": mode, "limit": limit}
+    return await request(agent, "/agentmemory/smart-search", payload, timeout=20)
+
+
+async def file_context(agent: Any, path: str) -> dict[str, Any]:
+    """Past observations about a file (mirrors memory_file_history)."""
+    payload = {"path": path}
+    return await request(agent, "/agentmemory/file-context", payload, timeout=15)
+
+
+async def timeline(agent: Any, anchor: str, limit: int = 20) -> dict[str, Any]:
+    """Chronological traversal around an observation anchor
+    (mirrors memory_timeline)."""
+    payload = {"anchor": anchor, "limit": limit}
+    return await request(agent, "/agentmemory/timeline", payload, timeout=15)
+
+
+async def observations(agent: Any, session_id: str, limit: int = 50) -> dict[str, Any]:
+    """Observations of a session (raw timeline source)."""
+    return await request(
+        agent,
+        f"/agentmemory/observations?sessionId={urllib.parse.quote(session_id)}&limit={limit}",
+        method="GET",
+        timeout=15,
+    )
+
+
+async def commits_list(agent: Any, limit: int = 20) -> dict[str, Any]:
+    """Recent commits linked to sessions (mirrors memory_commits)."""
+    return await request(agent, f"/agentmemory/commits?limit={limit}", method="GET", timeout=10)
+
+
+async def session_by_commit(agent: Any, sha: str) -> dict[str, Any]:
+    """Find the session that produced a commit (mirrors
+    memory_commit_lookup)."""
+    return await request(
+        agent, f"/agentmemory/session/by-commit?sha={urllib.parse.quote(sha)}", method="GET", timeout=10
+    )
+
+
 async def health(agent: Any) -> dict[str, Any]:
     return await request(agent, "/agentmemory/health", method="GET", timeout=3)
 

@@ -61,6 +61,31 @@ class AgentMemorySession(Extension):
                         loop_data.extras_temporary["agentmemory_actions"] = "\n".join(lines)
                 except Exception:
                     pass
+                # Inject pinned slots (persona, preferences, project
+                # context, guidance, pending items) so every session starts
+                # with the agent's durable self-knowledge. Only slots with
+                # non-empty content are included to keep context lean.
+                try:
+                    slots_result = await client.slots_list(self.agent)
+                    pinned = [
+                        slot
+                        for slot in slots_result.get("slots") or []
+                        if slot.get("pinned") and str(slot.get("content") or "").strip()
+                    ]
+                    if pinned:
+                        lines = ["## AgentMemory slots (pinned memory)"]
+                        lines.append(
+                            "Durable self-knowledge maintained across sessions. "
+                            "Treat as reference; update slots via the "
+                            "agentmemory_slots tool when they become stale."
+                        )
+                        for slot in pinned:
+                            label = slot.get("label", "?")
+                            content = str(slot.get("content") or "").strip()
+                            lines.append(f"### {label}\n{content}")
+                        loop_data.extras_temporary["agentmemory_slots"] = "\n".join(lines)
+                except Exception:
+                    pass
             if config["auto_capture"] and title.strip():
                 await client.observe(
                     self.agent,
