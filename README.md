@@ -15,3 +15,24 @@ The plugin uses `http://localhost:3111` for a host install and `http://host.dock
 The plugin injects context at the start of each Agent Zero turn, records the user prompt and tool results, and closes the AgentMemory session when the turn ends. It also exposes `agentmemory_search`, `agentmemory_save`, and `agentmemory_status`.
 
 Agent Zero's bundled `_memory` plugin is a separate memory backend. Disable one backend if both are enabled, otherwise the agent may receive duplicate recall and save the same information twice.
+
+## Memory panel (WebUI)
+
+Adds a **Memory** surface to the right canvas (next to Files / Editor / Factory / Desktop):
+
+- live server health badge (healthy / degraded / offline)
+- searchable memory list (`search` is proxied server-side)
+- recent captured sessions with observation counts
+- read-only by design: the proxy whitelists `health`, `memories`, `sessions`, `observations` (GET) and `search` (POST); all write endpoints return 403
+
+Panel files: `extensions/webui/right-canvas-panels/agentmemory-panel.html`, `extensions/webui/right_canvas_register_surfaces/register-agentmemory.js`, `extensions/webui/surfaces_register/register-agentmemory.js`, modal fallback `webui/main.html` + standalone `webui/panel.html`, backend proxy `api/proxy.py`. The proxy target follows the plugin `url` setting (or `AGENTMEMORY_URL` env). Requires the AgentMemory server to be running.
+
+## Auto-start server
+
+When `auto_start` is enabled (default) and the configured URL points at this container (`localhost`/`127.0.0.1`/`::1`), the plugin keeps the AgentMemory server alive:
+
+- **At framework boot**: `extensions/python/startup_migration/_10_agentmemory_server.py` runs `ensure_server()` in a daemon thread (boot never blocks).
+- **Self-heal**: the first turn of each chat re-checks health and revives the server in the background if it died.
+- The server is spawned detached (`start_new_session=True`) and writes to `<workdir>/agentmemory.log`.
+
+Remote URLs are never spawned — auto-start only manages a container-local server. Data persists in `<workdir>/data/`, so memories and sessions survive restarts.

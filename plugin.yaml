@@ -1,7 +1,7 @@
 name: agentmemory
 title: AgentMemory
 description: Connects Agent Zero to the AgentMemory REST server for durable recall and session capture.
-version: 0.1.0
+version: 0.3.0
 settings_sections:
   - external
 per_project_config: true
