@@ -171,6 +171,14 @@ def _spawn(workdir: str) -> bool:
         env.setdefault("TEAM_MODE", "shared")
         env.setdefault("TEAM_ID", "a0-team")
         env.setdefault("USER_ID", "a0")
+        # V8 heap headroom: under load the daemon self-reports
+        # memory_heap_tight (~87% of the ~64 MB default old-space) while
+        # RSS sits near 300 MB — OOM risk during graph/compress bursts.
+        # 512 MB keeps GC comfortable; appended (not setdefault) so an
+        # operator's own NODE_OPTIONS flags survive untouched.
+        node_options = env.get("NODE_OPTIONS", "")
+        if "--max-old-space-size" not in node_options:
+            env["NODE_OPTIONS"] = (node_options + " --max-old-space-size=512").strip()
         with open(log_path, "ab") as log:
             subprocess.Popen(
                 [npx, "-y", "@agentmemory/agentmemory"],
