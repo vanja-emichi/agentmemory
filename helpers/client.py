@@ -371,6 +371,29 @@ async def sentinel_trigger(agent: Any, sentinel_id: str, value: Any = None) -> d
     return await request(agent, "/agentmemory/sentinels/trigger", payload, timeout=15)
 
 
+async def routine_list(agent: Any, limit: int = 50) -> dict[str, Any]:
+    return await request(agent, f"/agentmemory/routines?limit={int(limit)}", method="GET", timeout=15)
+
+
+async def routine_create(
+    agent: Any,
+    name: str,
+    steps: list[dict[str, Any]],
+    description: str = "",
+) -> dict[str, Any]:
+    payload: dict[str, Any] = {"name": name, "steps": steps}
+    if description:
+        payload["description"] = description
+    return await request(agent, "/agentmemory/routines", payload, timeout=15)
+
+
+async def routine_run(agent: Any, routine_id: str, initiated_by: str = "") -> dict[str, Any]:
+    payload: dict[str, Any] = {"routineId": routine_id}
+    if initiated_by:
+        payload["initiatedBy"] = initiated_by
+    return await request(agent, "/agentmemory/routines/run", payload, timeout=30)
+
+
 async def insights_search(agent: Any, query: str, limit: int = 10) -> dict[str, Any]:
     """Search insights (mirrors memory_insight_search)."""
     payload = {"query": query, "limit": limit}
