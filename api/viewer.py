@@ -77,6 +77,11 @@ SHIM = r"""
       if (csrfToken) headers.set('X-CSRF-Token', csrfToken);
       init.headers = headers;
       return origFetch(proxied, init).then(function (res) {
+        if (res.status === 502) {
+          showBootOverlay();
+          return res;
+        }
+        hideBootOverlay();
         if (res.status === 403) {
           return bootstrapPromise.then(function () { return origFetch(proxied, init); });
         }
@@ -116,6 +121,33 @@ SHIM = r"""
   StubWS.prototype.removeEventListener = function () {};
   StubWS.prototype.dispatchEvent = function () { return false; };
   window.WebSocket = StubWS;
+  /* Boot overlay: when the daemon is unreachable (502 from passthrough),
+     show a connecting overlay and poll until it recovers, then reload. */
+  var bootOverlay = null;
+  var bootTimer = null;
+  function showBootOverlay() {
+    if (bootOverlay) return;
+    bootOverlay = document.createElement('div');
+    bootOverlay.id = '__am_boot_overlay';
+    bootOverlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(10,12,16,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;font-family:system-ui,sans-serif;color:#e2e8f0;font-size:14px;';
+    bootOverlay.innerHTML = '<div style="width:40px;height:40px;border:3px solid rgba(255,255,255,0.15);border-top-color:#60a5fa;border-radius:50%;animation:__am_spin 1s linear infinite;"></div>' +
+      '<div style="font-weight:600;">Connecting to AgentMemory…</div>' +
+      '<div style="opacity:0.6;font-size:12px;">The memory daemon is starting up. This will refresh automatically.</div>';
+    var style = document.createElement('style');
+    style.textContent = '@keyframes __am_spin { to { transform: rotate(360deg); } }';
+    document.head.appendChild(style);
+    (document.body || document.documentElement).appendChild(bootOverlay);
+    if (bootTimer) return;
+    bootTimer = setInterval(function () {
+      fetch(PROXY_BASE + encodeURIComponent('health'), { credentials: 'same-origin' })
+        .then(function (r) { if (r.ok) { clearInterval(bootTimer); bootTimer = null; location.reload(); } })
+        .catch(function () {});
+    }, 2000);
+  }
+  function hideBootOverlay() {
+    if (bootOverlay) { bootOverlay.remove(); bootOverlay = null; }
+  }
+
   /* Post-load patches: keep the dashboard usable in embedded mode.
      1) The viewer's refresh path wipes tab content (loading spinner) before
         fetching, which snaps scroll to the top on every 10s poll. Wrap every
