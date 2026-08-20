@@ -333,6 +333,44 @@ async def insights_list(agent: Any, limit: int = 20) -> dict[str, Any]:
     return await request(agent, f"/agentmemory/insights?limit={limit}", method="GET", timeout=10)
 
 
+async def sentinel_list(agent: Any, limit: int = 50) -> dict[str, Any]:
+    return await request(agent, f"/agentmemory/sentinels?limit={int(limit)}", method="GET", timeout=15)
+
+
+async def sentinel_create(
+    agent: Any,
+    name: str,
+    sentinel_type: str,
+    config: dict[str, Any] | None = None,
+    linked_action_ids: list[str] | None = None,
+) -> dict[str, Any]:
+    payload: dict[str, Any] = {"name": name, "type": sentinel_type}
+    if config:
+        payload["config"] = config
+    if linked_action_ids:
+        payload["linkedActionIds"] = linked_action_ids
+    return await request(agent, "/agentmemory/sentinels", payload, timeout=15)
+
+
+async def sentinel_update(
+    agent: Any,
+    sentinel_id: str,
+    fields: dict[str, Any],
+) -> dict[str, Any]:
+    return await request(agent, f"/agentmemory/sentinels/{sentinel_id}", fields, method="PUT", timeout=15)
+
+
+async def sentinel_delete(agent: Any, sentinel_id: str) -> dict[str, Any]:
+    return await request(agent, f"/agentmemory/sentinels/{sentinel_id}", {}, method="DELETE", timeout=15)
+
+
+async def sentinel_trigger(agent: Any, sentinel_id: str, value: Any = None) -> dict[str, Any]:
+    payload: dict[str, Any] = {"sentinelId": sentinel_id}
+    if value is not None:
+        payload["value"] = value
+    return await request(agent, "/agentmemory/sentinels/trigger", payload, timeout=15)
+
+
 async def insights_search(agent: Any, query: str, limit: int = 10) -> dict[str, Any]:
     """Search insights (mirrors memory_insight_search)."""
     payload = {"query": query, "limit": limit}
