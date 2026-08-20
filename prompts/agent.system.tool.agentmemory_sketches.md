@@ -12,3 +12,17 @@ Note: daemon 0.9.29 exposes only create and list for sketches; no update/delete/
 - Planning: sketch out a task decomposition before committing to durable actions/routines.
 - Scratch state: temporary working context that should not pollute long-term memory.
 - Brainstorming: iterate freely — the TTL cleans up automatically.
+
+usage:
+~~~json
+{
+  "thoughts": ["Let me sketch the task decomposition before committing to actions."],
+  "headline": "Creating planning sketch",
+  "tool_name": "agentmemory_sketches",
+  "tool_args": {
+    "operation": "create",
+    "title": "Refactor plan",
+    "description": "Scratch decomposition of the auth refactor"
+  }
+}
+~~~

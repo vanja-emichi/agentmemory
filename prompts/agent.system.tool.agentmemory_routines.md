@@ -21,3 +21,26 @@ Each step is either a plain string (used as title) or an object:
 - Delegation prep: run a routine to materialize actions, then dispatch subordinates per action.
 
 Run response includes `actionsCreated` and `actionIds` — the materialized action items ready for execution.
+
+usage:
+~~~json
+{
+  "thoughts": ["I should save this recurring release checklist as a routine."],
+  "headline": "Creating release-checklist routine",
+  "tool_name": "agentmemory_routines",
+  "tool_args": {
+    "operation": "create",
+    "name": "release-checklist",
+    "steps": [
+      {
+        "title": "Run full test suite"
+      },
+      {
+        "title": "Bump version",
+        "dependsOn": [0]
+      }
+    ],
+    "description": "Standard release procedure"
+  }
+}
+~~~

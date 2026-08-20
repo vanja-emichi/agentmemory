@@ -23,3 +23,21 @@ Note: daemon 0.9.29 does not expose update/delete/get-by-id routes for sentinels
 - Deferred waits: "watch for X, then do Y" — sentinel for X, action for Y.
 
 Trigger response includes `unblockedCount` — how many linked actions became eligible.
+
+usage:
+~~~json
+{
+  "thoughts": ["The CI pipeline should gate the deploy action."],
+  "headline": "Creating webhook sentinel for CI completion",
+  "tool_name": "agentmemory_sentinels",
+  "tool_args": {
+    "operation": "create",
+    "name": "ci-done",
+    "type": "webhook",
+    "config": {
+      "path": "/ci-done"
+    },
+    "linked_action_ids": "act_..."
+  }
+}
+~~~
