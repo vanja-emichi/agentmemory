@@ -6,6 +6,8 @@ from usr.plugins.agentmemory.helpers.client import (
     action_create,
     action_update,
     actions_list,
+    checkpoint_create,
+    checkpoint_resolve,
     crystallize,
     frontier,
     next_action,
@@ -25,6 +27,7 @@ class AgentMemoryActions(Tool):
             "frontier": self._frontier,
             "next": self._next,
             "crystallize": self._crystallize,
+            "checkpoint": self._checkpoint,
         }
         handler = handlers.get(operation)
         if not handler:
@@ -169,6 +172,76 @@ class AgentMemoryActions(Tool):
             f"Lessons generated: {len(lessons)}",
         ]
         return Response("\n".join(lines), break_loop=False)
+
+    async def _checkpoint(
+        self, name="", status="", note="", action_id="", **kwargs
+    ):
+        name = str(name or "").strip()
+        if not name:
+            return Response("Error: name is required", break_loop=False)
+        status = str(status or "").strip().lower()
+        try:
+            if status:
+                if status not in {"pending", "passed", "failed", "approved", "rejected"}:
+                    return Response(
+                        "Error: status must be one of pending, passed, failed, "
+                        "approved, rejected",
+                        break_loop=False,
+                    )
+                # resolve needs the checkpoint id; if the caller passed a
+                # name, look up pending checkpoints to find its id
+                cp_id = str(action_id or "").strip()
+                if not cp_id.startswith("ckpt_"):
+                    cp_id = await self._find_checkpoint_id(name) or ""
+                if not cp_id:
+                    return Response(
+                        f"Error: no checkpoint found named '{name}' to resolve",
+                        break_loop=False,
+                    )
+                result = await checkpoint_resolve(
+                    self.agent, cp_id, status, str(note or "")
+                )
+                action = "resolved"
+            else:
+                result = await checkpoint_create(
+                    self.agent, name, str(action_id or "") if str(action_id or "").startswith("act_") else "", "", str(note or "")
+                )
+                action = "created"
+        except AgentMemoryError as error:
+            return Response(
+                f"AgentMemory checkpoint failed: {error}", break_loop=False
+            )
+        checkpoint = result.get("checkpoint") or result
+        return Response(
+            json.dumps(
+                {
+                    action: True,
+                    "id": checkpoint.get("id"),
+                    "name": checkpoint.get("name", name),
+                    "status": checkpoint.get("status"),
+                },
+                indent=2,
+                ensure_ascii=False,
+            ),
+            break_loop=False,
+        )
+
+    async def _find_checkpoint_id(self, name: str) -> str:
+        try:
+            result = await actions_list(self.agent, "", 1)  # warm conn
+        except Exception:
+            pass
+        try:
+            from usr.plugins.agentmemory.helpers.client import request as _request
+            data = await _request(
+                self.agent, "/agentmemory/checkpoints", method="GET", timeout=10
+            )
+            for cp in data.get("checkpoints") or []:
+                if cp.get("name") == name:
+                    return str(cp.get("id") or "")
+        except Exception:
+            pass
+        return ""
 
 
 def _csv(value):

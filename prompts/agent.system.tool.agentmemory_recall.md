@@ -8,6 +8,7 @@ Use `agentmemory_recall` for historical questions beyond basic keyword search: u
 - `operation: "timeline"` — chronological walk around an observation anchor. Args: `anchor` (observation id from `session`), `limit`
 - `operation: "commits"` — recent commits linked to agent sessions. Arg: `limit`
 - `operation: "commit_lookup"` — which session produced a commit. Arg: `sha` (required)
+- `operation: "graph"` — knowledge graph query (entities + relations). Args: `limit`, `node_type` (optional filter, e.g. file, concept, library)
 
 ### When to use
 - "What do we know about X?" → `search` (richer than basic agentmemory_search)

@@ -8,6 +8,7 @@ Use `agentmemory_actions` to manage persistent action items in AgentMemory. Acti
 - `operation: "frontier"` — unblocked actions ranked by priority. Arg: `limit`.
 - `operation: "next"` — single most important next action.
 - `operation: "crystallize"` — distill completed action chains into a crystal + auto-generated lessons. Args: `action_ids` (required, comma-separated), `session_id` (optional)
+- `operation: "checkpoint"` — create or resolve an external gate (CI result, approval, deploy status) on an action. Args: `name` (required), `status` (omit to create pending, or one of pending/passed/failed/approved/rejected to resolve), `note`, `action_id` (links the gate to an action)
 
 ### When to PROPOSE actions (active behavior)
 You must proactively surface action-worthy work instead of waiting for the user to ask. When you finish a meaningful task, discover follow-up work, notice deferred TODOs, or the user mentions future plans, propose actions to the user in your response BEFORE creating them:

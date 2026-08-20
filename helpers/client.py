@@ -325,6 +325,71 @@ async def session_by_commit(agent: Any, sha: str) -> dict[str, Any]:
     )
 
 
+# ------------------------------------------------------------ tier 2 lookups
+
+
+async def insights_list(agent: Any, limit: int = 20) -> dict[str, Any]:
+    """List synthesized insights (mirrors memory_insight_list)."""
+    return await request(agent, f"/agentmemory/insights?limit={limit}", method="GET", timeout=10)
+
+
+async def insights_search(agent: Any, query: str, limit: int = 10) -> dict[str, Any]:
+    """Search insights (mirrors memory_insight_search)."""
+    payload = {"query": query, "limit": limit}
+    return await request(agent, "/agentmemory/insights/search", payload, timeout=15)
+
+
+async def patterns(agent: Any) -> dict[str, Any]:
+    """Recurring patterns across sessions (mirrors memory_patterns)."""
+    return await request(agent, "/agentmemory/patterns", {}, timeout=20)
+
+
+async def profile(agent: Any) -> dict[str, Any]:
+    """Project profile: top concepts/files/errors (mirrors memory_profile)."""
+    project = get_scope(agent)[0]
+    return await request(
+        agent, f"/agentmemory/profile?project={urllib.parse.quote(project)}", method="GET", timeout=15
+    )
+
+
+async def graph_query(agent: Any, limit: int = 25, node_type: str = "") -> dict[str, Any]:
+    """Query the knowledge graph (mirrors memory_graph_query)."""
+    payload: dict = {"limit": limit}
+    if node_type:
+        payload["type"] = node_type
+    return await request(agent, "/agentmemory/graph/query", payload, timeout=15)
+
+
+async def diagnose(agent: Any) -> dict[str, Any]:
+    """Run subsystem health checks (mirrors memory_diagnose)."""
+    return await request(agent, "/agentmemory/diagnostics", {}, timeout=30)
+
+
+async def checkpoint_create(
+    agent: Any, name: str, action_id: str = "", status: str = "", note: str = ""
+) -> dict[str, Any]:
+    """Create an external checkpoint gating an action (mirrors
+    memory_checkpoint)."""
+    payload: dict = {"name": name}
+    if action_id:
+        payload["actionId"] = action_id
+    if status:
+        payload["status"] = status
+    if note:
+        payload["note"] = note
+    return await request(agent, "/agentmemory/checkpoints", payload, timeout=15)
+
+
+async def checkpoint_resolve(
+    agent: Any, checkpoint_id: str, status: str, note: str = ""
+) -> dict[str, Any]:
+    """Resolve a checkpoint (CI result, approval, deploy status)."""
+    payload: dict = {"checkpointId": checkpoint_id, "status": status}
+    if note:
+        payload["note"] = note
+    return await request(agent, "/agentmemory/checkpoints/resolve", payload, timeout=15)
+
+
 async def health(agent: Any) -> dict[str, Any]:
     return await request(agent, "/agentmemory/health", method="GET", timeout=3)
 

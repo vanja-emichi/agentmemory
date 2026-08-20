@@ -5,6 +5,7 @@ from usr.plugins.agentmemory.helpers.client import (
     AgentMemoryError,
     commits_list,
     file_context,
+    graph_query,
     observations,
     session_by_commit,
     smart_search,
@@ -26,6 +27,7 @@ class AgentMemoryRecall(Tool):
             "timeline": self._timeline,
             "commits": self._commits,
             "commit_lookup": self._commit_lookup,
+            "graph": self._graph,
         }
         handler = handlers.get(operation)
         if not handler:
@@ -149,6 +151,22 @@ class AgentMemoryRecall(Tool):
         lines = [f"{len(sessions)} session(s) linked to {sha}:"]
         for item in sessions:
             lines.append(json.dumps(item, ensure_ascii=False)[:300])
+        return Response("\n".join(lines), break_loop=False)
+
+    async def _graph(self, limit=25, node_type="", **kwargs):
+        try:
+            result = await graph_query(self.agent, _as_int(limit, 25), str(node_type or ""))
+        except AgentMemoryError as error:
+            return Response(f"AgentMemory graph query failed: {error}", break_loop=False)
+        nodes = result.get("nodes") or []
+        edges = result.get("edges") or []
+        lines = [
+            f"Graph: {len(nodes)} node(s), {len(edges)} edge(s) "
+            f"(total {result.get('totalNodes', '?')}/{result.get('totalEdges', '?')})"
+        ]
+        for node in nodes[:20]:
+            name = str(node.get("name") or "?")[:60]
+            lines.append(f"- [{node.get('type', '?')}] {name}")
         return Response("\n".join(lines), break_loop=False)
 
 
