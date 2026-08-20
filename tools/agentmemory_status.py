@@ -57,10 +57,10 @@ class AgentMemoryStatus(Tool):
         ]
         for m in metrics[:20]:
             fid = str(m.get("id") or m.get("functionId") or m.get("name") or "?")[:40]
-            ok = m.get("ok", m.get("successes", "?"))
-            fail = m.get("failed", m.get("failures", "?"))
-            avg = m.get("avgMs", m.get("avgDurationMs", "?"))
-            q = m.get("avgQuality", m.get("quality", ""))
+            ok = m.get("successCount", m.get("ok", "?"))
+            fail = m.get("failureCount", m.get("failed", "?"))
+            avg = m.get("avgLatencyMs", m.get("avgMs", "?"))
+            q = m.get("avgQualityScore", m.get("avgQuality", ""))
             qtxt = f" q={round(q, 1)}" if isinstance(q, (int, float)) else ""
             lines.append(f"- {fid}: ok={ok} fail={fail} avg={avg}ms{qtxt}")
         return Response("\n".join(lines), break_loop=False)
