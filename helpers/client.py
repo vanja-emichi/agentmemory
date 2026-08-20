@@ -234,7 +234,7 @@ async def slot_append(agent: Any, label: str, text: str) -> dict[str, Any]:
 
 async def slot_replace(agent: Any, label: str, text: str) -> dict[str, Any]:
     """Replace slot content (mirrors memory_slot_replace)."""
-    payload = {"label": label, "text": text, "scope": get_scope(agent)[0]}
+    payload = {"label": label, "content": text, "scope": get_scope(agent)[0]}
     return await request(agent, "/agentmemory/slot/replace", payload, timeout=15)
 
 
