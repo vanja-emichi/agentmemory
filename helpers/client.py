@@ -461,3 +461,119 @@ def _as_int(value: Any, default: int) -> int:
         return int(value)
     except (TypeError, ValueError):
         return default
+
+
+# ---- Tier 3: multi-agent coordination (signals, leases, team) ----
+
+
+def default_agent_id(agent: Any) -> str:
+    """Stable agent identity for signals/leases/team calls."""
+    config = get_config(agent)
+    if config["agent_id"].strip():
+        return config["agent_id"].strip()
+    number = getattr(agent, "agent_number", 0) or 0
+    return "a0" if number == 0 else f"agent-{number}"
+
+
+async def signal_send(
+    agent: Any,
+    from_id: str,
+    content: str,
+    to: str = "",
+    type_: str = "",
+    reply_to: str = "",
+) -> dict[str, Any]:
+    """Send a signal to another agent or broadcast (mirrors
+    memory_signal_send)."""
+    payload: dict = {"from": from_id, "content": content}
+    if to:
+        payload["to"] = to
+    if type_:
+        payload["type"] = type_
+    if reply_to:
+        payload["replyTo"] = reply_to
+    return await request(agent, "/agentmemory/signals/send", payload, timeout=10)
+
+
+async def signal_read(
+    agent: Any,
+    agent_id: str,
+    unread_only: bool = False,
+    thread_id: str = "",
+    limit: int = 50,
+) -> dict[str, Any]:
+    """Read (and mark read) signals for an agent (mirrors
+    memory_signal_read)."""
+    params = [f"agentId={urllib.parse.quote(agent_id)}", f"limit={limit}"]
+    if unread_only:
+        params.append("unreadOnly=true")
+    if thread_id:
+        params.append(f"threadId={urllib.parse.quote(thread_id)}")
+    return await request(
+        agent, f"/agentmemory/signals?{'&'.join(params)}", method="GET", timeout=10
+    )
+
+
+async def signal_threads(agent: Any, agent_id: str) -> dict[str, Any]:
+    """List conversation threads for an agent (mirrors signal-threads)."""
+    return await request(
+        agent,
+        f"/agentmemory/signals/threads?agentId={urllib.parse.quote(agent_id)}",
+        method="GET",
+        timeout=10,
+    )
+
+
+async def lease_acquire(
+    agent: Any, action_id: str, agent_id: str, ttl_seconds: int = 600
+) -> dict[str, Any]:
+    """Acquire an exclusive lease on an action (mirrors memory_lease)."""
+    payload = {"actionId": action_id, "agentId": agent_id, "ttlSeconds": ttl_seconds}
+    return await request(agent, "/agentmemory/leases/acquire", payload, timeout=15)
+
+
+async def lease_renew(
+    agent: Any, action_id: str, agent_id: str, ttl_seconds: int = 600
+) -> dict[str, Any]:
+    """Renew an active lease, extending its expiry."""
+    payload = {"actionId": action_id, "agentId": agent_id, "ttlSeconds": ttl_seconds}
+    return await request(agent, "/agentmemory/leases/renew", payload, timeout=15)
+
+
+async def lease_release(
+    agent: Any, action_id: str, agent_id: str, result: str = ""
+) -> dict[str, Any]:
+    """Release a lease (optionally marking the action done)."""
+    payload = {"actionId": action_id, "agentId": agent_id}
+    if result:
+        payload["result"] = result
+    return await request(agent, "/agentmemory/leases/release", payload, timeout=15)
+
+
+async def team_share(agent: Any, item_id: str, item_type: str) -> dict[str, Any]:
+    """Share a memory/observation/pattern with the team (mirrors
+    memory_team_share)."""
+    payload = {"itemId": item_id, "itemType": item_type}
+    return await request(agent, "/agentmemory/team/share", payload, timeout=15)
+
+
+async def team_feed(agent: Any, limit: int = 20) -> dict[str, Any]:
+    """Recent shared items from team members (mirrors memory_team_feed)."""
+    agent_id = default_agent_id(agent)
+    return await request(
+        agent,
+        f"/agentmemory/team/feed?agentId={urllib.parse.quote(agent_id)}&limit={limit}",
+        method="GET",
+        timeout=15,
+    )
+
+
+async def team_profile(agent: Any, agent_id: str = "") -> dict[str, Any]:
+    """Team profile: members, top concepts, shared patterns."""
+    agent_id = agent_id or default_agent_id(agent)
+    return await request(
+        agent,
+        f"/agentmemory/team/profile?agentId={urllib.parse.quote(agent_id)}",
+        method="GET",
+        timeout=15,
+    )

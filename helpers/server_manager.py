@@ -166,6 +166,11 @@ def _spawn(workdir: str) -> bool:
         env.setdefault("AGENTMEMORY_SLOTS", "true")
         env.setdefault("AGENTMEMORY_REFLECT", "true")
         env.setdefault("RERANK_ENABLED", "true")
+        # Tier 3: team memory (share/feed/profile). Disabled upstream by
+        # default; enabled so A0 subordinates can share discoveries.
+        env.setdefault("TEAM_MODE", "shared")
+        env.setdefault("TEAM_ID", "a0-team")
+        env.setdefault("USER_ID", "a0")
         with open(log_path, "ab") as log:
             subprocess.Popen(
                 [npx, "-y", "@agentmemory/agentmemory"],
