@@ -105,6 +105,28 @@ async def search(agent: Any, query: str, limit: int = 10) -> dict[str, Any]:
     return await request(agent, "/agentmemory/search", payload, timeout=10)
 
 
+async def memories_list(agent: Any, limit: int = 20, offset: int = 0) -> dict[str, Any]:
+    """Page through stored memories without a query."""
+    limit = max(1, min(100, int(limit)))
+    offset = max(0, int(offset))
+    return await request(
+        agent,
+        f"/agentmemory/memories?limit={limit}&offset={offset}",
+        method="GET",
+        timeout=10,
+    )
+
+
+async def memory_get(agent: Any, memory_id: str) -> dict[str, Any]:
+    """Fetch one memory by id, including full metadata."""
+    return await request(
+        agent,
+        f"/agentmemory/memories/{urllib.parse.quote(str(memory_id))}",
+        method="GET",
+        timeout=10,
+    )
+
+
 async def remember(
     agent: Any,
     content: str,
