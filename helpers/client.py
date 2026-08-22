@@ -243,20 +243,20 @@ async def slot_create(
         "sizeLimit": size_limit,
         "description": description,
         "pinned": pinned,
-        "scope": get_scope(agent)[0],
+        "scope": "project",
     }
     return await request(agent, "/agentmemory/slot", payload, timeout=15)
 
 
 async def slot_append(agent: Any, label: str, text: str) -> dict[str, Any]:
     """Append text to a slot (mirrors memory_slot_append)."""
-    payload = {"label": label, "text": text, "scope": get_scope(agent)[0]}
+    payload = {"label": label, "text": text, "scope": "project"}
     return await request(agent, "/agentmemory/slot/append", payload, timeout=15)
 
 
 async def slot_replace(agent: Any, label: str, text: str) -> dict[str, Any]:
     """Replace slot content (mirrors memory_slot_replace)."""
-    payload = {"label": label, "content": text, "scope": get_scope(agent)[0]}
+    payload = {"label": label, "content": text, "scope": "project"}
     return await request(agent, "/agentmemory/slot/replace", payload, timeout=15)
 
 
