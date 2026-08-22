@@ -166,6 +166,10 @@ def _spawn(workdir: str) -> bool:
         env.setdefault("AGENTMEMORY_SLOTS", "true")
         env.setdefault("AGENTMEMORY_REFLECT", "true")
         env.setdefault("RERANK_ENABLED", "true")
+        # LLM timeout headroom: consolidation prompts are large and the 60s
+        # upstream default intermittently times out on slower providers
+        # (22 semantic-consolidation failures observed against z.ai glm-5.2).
+        env.setdefault("AGENTMEMORY_LLM_TIMEOUT_MS", "120000")
         # Tier 3: team memory (share/feed/profile). Disabled upstream by
         # default; enabled so A0 subordinates can share discoveries.
         env.setdefault("TEAM_MODE", "shared")

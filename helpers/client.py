@@ -147,6 +147,35 @@ async def remember(
     return await request(agent, "/agentmemory/remember", payload, timeout=10)
 
 
+async def relations_list(agent: Any, limit: int = 50) -> dict[str, Any]:
+    """List memory relations (mirrors upstream GET /relations)."""
+    limit = max(1, min(200, int(limit)))
+    return await request(
+        agent,
+        f"/agentmemory/relations?limit={limit}",
+        method="GET",
+        timeout=10,
+    )
+
+
+async def relation_create(
+    agent: Any,
+    source_id: str,
+    target_id: str,
+    relation_type: str,
+    confidence: float | None = None,
+) -> dict[str, Any]:
+    """Create a memory relation (mirrors upstream mem::relate / POST /relations)."""
+    payload: dict[str, Any] = {
+        "sourceId": str(source_id),
+        "targetId": str(target_id),
+        "type": str(relation_type),
+    }
+    if confidence is not None:
+        payload["confidence"] = max(0.0, min(1.0, float(confidence)))
+    return await request(agent, "/agentmemory/relations", payload, timeout=10)
+
+
 async def actions_list(agent: Any, status: str = "", limit: int = 20) -> dict[str, Any]:
     """List actions, optionally filtered by status."""
     params = [f"limit={limit}"]

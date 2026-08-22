@@ -44,3 +44,20 @@ Remote URLs are never spawned — auto-start only manages a container-local serv
 - `create` / `list` / `update` / `frontier` / `next` operations, mirroring upstream's `memory_action_create`/`memory_action_update`/`memory_frontier`/`memory_next` MCP tools
 - **Propose-then-confirm etiquette** baked into the tool prompt: the agent proactively proposes action-worthy follow-ups at natural moments (completed work, TODOs, user-stated plans) and only creates them after user approval
 - When `auto_recall` is on and pending actions exist, the session-start context injection surfaces the frontier (top 5) so the agent can propose continuing open work in any future chat
+
+## Relations tool
+
+`agentmemory_relations` links memories so the dashboard Relations tab and memory traversal reflect how knowledge connects:
+
+- `relate` — create a typed link between two memory ids (`supersedes`, `extends`, `derives`, `contradicts`, `related`), optional explicit `confidence` (otherwise computed from shared sessions/age)
+- `list` — browse existing relations
+
+Relations are never created automatically by the daemon (except `supersedes` chains from memory evolution) — the client is expected to relate the knowledge it connects. This tool is that wiring.
+
+## Memory types and procedural consolidation
+
+`agentmemory_save` uses the daemon's exact type vocabulary: `fact`, `architecture`, `workflow`, `pattern`, `preference`, `bug`. Any other type silently degrades to `fact` upstream. `pattern` matters: procedural consolidation (the dashboard Procedures tab) only runs when ≥2 memories of type `pattern` recur (frequency ≥2) — save recurring behaviors explicitly as `pattern`.
+
+## LLM timeout
+
+The daemon's default LLM timeout is 60s; consolidation prompts are large and slow providers can exceed it (intermittent `Semantic consolidation failed` / `LLM graph extraction failed`). Auto-start spawns the daemon with `AGENTMEMORY_LLM_TIMEOUT_MS=120000`; override via the daemon's own environment to raise or lower it.

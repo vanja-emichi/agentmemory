@@ -15,14 +15,14 @@ class AgentMemorySave(Tool):
             },
             "type": {
                 "type": "string",
-                "description": "Memory type.",
+                "description": "Memory type (daemon vocabulary). Invalid types silently degrade to fact upstream.",
                 "enum": [
                     "fact",
-                    "rule",
-                    "lesson",
-                    "note",
-                    "procedure",
-                    "insight"
+                    "architecture",
+                    "workflow",
+                    "pattern",
+                    "preference",
+                    "bug"
                 ]
             },
             "concepts": {
