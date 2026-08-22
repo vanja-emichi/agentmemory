@@ -11,6 +11,35 @@ from usr.plugins.agentmemory.helpers.client import (
 
 class AgentMemoryTeam(Tool):
     """Team memory: share, feed, profile."""
+    # D11: declared native function-calling schema (schema source-of-truth).
+    native_schema = {
+    "type": "object",
+    "properties": {
+        "operation": {
+            "type": "string",
+            "description": "Operation to perform. One of: feed, profile, share.",
+            "enum": [
+                "feed",
+                "profile",
+                "share"
+            ]
+        },
+        "item_id": {
+            "type": "string"
+        },
+        "item_type": {
+            "type": "string"
+        },
+        "limit": {
+            "type": "integer"
+        },
+        "agent_id": {
+            "type": "string"
+        }
+    },
+    "additionalProperties": True
+}
+
 
     async def execute(self, operation="", **kwargs):
         operation = str(operation or "").strip().lower()

@@ -5,6 +5,42 @@ from usr.plugins.agentmemory.helpers.client import AgentMemoryError, remember
 
 
 class AgentMemorySave(Tool):
+    # D11: declared native function-calling schema (schema source-of-truth).
+    native_schema = {
+        "type": "object",
+        "properties": {
+            "content": {
+                "type": "string",
+                "description": "Memory content to store."
+            },
+            "type": {
+                "type": "string",
+                "description": "Memory type.",
+                "enum": [
+                    "fact",
+                    "rule",
+                    "lesson",
+                    "note",
+                    "procedure",
+                    "insight"
+                ]
+            },
+            "concepts": {
+                "type": "string",
+                "description": "Comma-separated concept tags."
+            },
+            "files": {
+                "type": "string",
+                "description": "Comma-separated associated file paths."
+            }
+        },
+        "required": [
+            "content"
+        ],
+        "additionalProperties": True
+    }
+
+
     async def execute(self, content="", type="fact", concepts="", files="", **kwargs):
         content = str(content or "").strip()
         if not content:

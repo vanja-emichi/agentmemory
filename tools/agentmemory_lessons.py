@@ -12,6 +12,36 @@ from usr.plugins.agentmemory.helpers.client import (
 class AgentMemoryLessons(Tool):
     """Consult and manage AgentMemory lessons: confidence-weighted rules
     derived from corrections, crystals, and recurring patterns."""
+    # D11: declared native function-calling schema (schema source-of-truth).
+    native_schema = {
+    "type": "object",
+    "properties": {
+        "operation": {
+            "type": "string",
+            "description": "Operation to perform."
+        },
+        "query": {
+            "type": "string"
+        },
+        "limit": {
+            "type": "integer"
+        },
+        "content": {
+            "type": "string"
+        },
+        "context": {
+            "type": "string"
+        },
+        "confidence": {
+            "type": "number"
+        },
+        "lesson_id": {
+            "type": "string"
+        }
+    },
+    "additionalProperties": True
+}
+
 
     async def execute(self, operation="", **kwargs):
         operation = str(operation or "").strip().lower()

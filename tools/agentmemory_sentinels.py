@@ -14,6 +14,39 @@ SENTINEL_TYPES = ("webhook", "timer", "threshold", "pattern", "approval", "custo
 
 class AgentMemorySentinels(Tool):
     """Event gates: watch conditions that block or unblock actions."""
+    # D11: declared native function-calling schema (schema source-of-truth).
+    native_schema = {
+    "type": "object",
+    "properties": {
+        "operation": {
+            "type": "string",
+            "description": "Operation to perform."
+        },
+        "name": {
+            "type": "string"
+        },
+        "type": {
+            "type": "string"
+        },
+        "config": {
+            "type": "string"
+        },
+        "linked_action_ids": {
+            "type": "string"
+        },
+        "limit": {
+            "type": "integer"
+        },
+        "sentinel_id": {
+            "type": "string"
+        },
+        "value": {
+            "type": "string"
+        }
+    },
+    "additionalProperties": True
+}
+
 
     async def execute(self, operation="", **kwargs):
         operation = str(operation or "").strip().lower()

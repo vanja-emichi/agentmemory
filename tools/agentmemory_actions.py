@@ -17,6 +17,69 @@ from usr.plugins.agentmemory.helpers.client import (
 class AgentMemoryActions(Tool):
     """Manage AgentMemory action items: propose, create, list, update,
     frontier and next."""
+    # D11: declared native function-calling schema (schema source-of-truth).
+    native_schema = {
+    "type": "object",
+    "properties": {
+        "operation": {
+            "type": "string",
+            "description": "Operation to perform. One of: checkpoint, create, crystallize, frontier, list, next, update.",
+            "enum": [
+                "checkpoint",
+                "create",
+                "crystallize",
+                "frontier",
+                "list",
+                "next",
+                "update"
+            ]
+        },
+        "title": {
+            "type": "string"
+        },
+        "description": {
+            "type": "string"
+        },
+        "priority": {
+            "type": "integer"
+        },
+        "tags": {
+            "type": "string"
+        },
+        "parent_id": {
+            "type": "string"
+        },
+        "requires": {
+            "type": "string"
+        },
+        "status": {
+            "type": "string"
+        },
+        "limit": {
+            "type": "integer"
+        },
+        "action_id": {
+            "type": "string"
+        },
+        "result": {
+            "type": "string"
+        },
+        "action_ids": {
+            "type": "string"
+        },
+        "session_id": {
+            "type": "string"
+        },
+        "name": {
+            "type": "string"
+        },
+        "note": {
+            "type": "string"
+        }
+    },
+    "additionalProperties": True
+}
+
 
     async def execute(self, operation="", **kwargs):
         operation = str(operation or "").strip().lower()

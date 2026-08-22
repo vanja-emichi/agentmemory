@@ -14,6 +14,24 @@ from usr.plugins.agentmemory.helpers.client import (
 
 class AgentMemoryStatus(Tool):
     """AgentMemory health, metrics, audit, diagnostics, export."""
+    # D11: declared native function-calling schema (schema source-of-truth).
+    native_schema = {
+    "type": "object",
+    "properties": {
+        "operation": {
+            "type": "string",
+            "description": "Operation to perform."
+        },
+        "limit": {
+            "type": "integer"
+        },
+        "action_id": {
+            "type": "string"
+        }
+    },
+    "additionalProperties": True
+}
+
 
     async def execute(self, operation="", **kwargs):
         operation = str(operation or "").strip().lower()

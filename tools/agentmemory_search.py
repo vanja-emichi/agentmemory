@@ -11,6 +11,40 @@ from usr.plugins.agentmemory.helpers.client import (
 
 class AgentMemorySearch(Tool):
     """AgentMemory keyword search plus direct memory list/get by id."""
+    # D11: declared native function-calling schema (schema source-of-truth).
+    native_schema = {
+        "type": "object",
+        "properties": {
+            "query": {
+                "type": "string",
+                "description": "Search text. Required for search (default) operation."
+            },
+            "limit": {
+                "type": "integer",
+                "description": "Max results for search/list."
+            },
+            "offset": {
+                "type": "integer",
+                "description": "Page offset for list."
+            },
+            "memory_id": {
+                "type": "string",
+                "description": "Memory id for the get operation."
+            },
+            "operation": {
+                "type": "string",
+                "description": "One of: search (default), list, get.",
+                "enum": [
+                    "search",
+                    "list",
+                    "get"
+                ]
+            }
+        },
+        "additionalProperties": True
+    }
+
+
 
     async def execute(self, query="", limit=10, offset=0, memory_id="", operation="", **kwargs):
         operation = str(operation or "").strip().lower()

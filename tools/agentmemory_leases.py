@@ -12,6 +12,35 @@ from usr.plugins.agentmemory.helpers.client import (
 
 class AgentMemoryLeases(Tool):
     """Exclusive action leases: acquire, renew, release."""
+    # D11: declared native function-calling schema (schema source-of-truth).
+    native_schema = {
+    "type": "object",
+    "properties": {
+        "operation": {
+            "type": "string",
+            "description": "Operation to perform. One of: acquire, release, renew.",
+            "enum": [
+                "acquire",
+                "release",
+                "renew"
+            ]
+        },
+        "action_id": {
+            "type": "string"
+        },
+        "agent_id": {
+            "type": "string"
+        },
+        "ttl_seconds": {
+            "type": "integer"
+        },
+        "result": {
+            "type": "string"
+        }
+    },
+    "additionalProperties": True
+}
+
 
     async def execute(self, operation="", **kwargs):
         operation = str(operation or "").strip().lower()

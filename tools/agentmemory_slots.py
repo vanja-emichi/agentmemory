@@ -14,6 +14,43 @@ from usr.plugins.agentmemory.helpers.client import (
 class AgentMemorySlots(Tool):
     """Manage AgentMemory pinned memory slots: list, get, create,
     append, replace."""
+    # D11: declared native function-calling schema (schema source-of-truth).
+    native_schema = {
+    "type": "object",
+    "properties": {
+        "operation": {
+            "type": "string",
+            "description": "Operation to perform. One of: append, create, get, list, replace.",
+            "enum": [
+                "append",
+                "create",
+                "get",
+                "list",
+                "replace"
+            ]
+        },
+        "label": {
+            "type": "string"
+        },
+        "content": {
+            "type": "string"
+        },
+        "size_limit": {
+            "type": "integer"
+        },
+        "description": {
+            "type": "string"
+        },
+        "pinned": {
+            "type": "boolean"
+        },
+        "text": {
+            "type": "string"
+        }
+    },
+    "additionalProperties": True
+}
+
 
     async def execute(self, operation="", **kwargs):
         operation = str(operation or "").strip().lower()

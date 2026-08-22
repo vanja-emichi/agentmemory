@@ -13,6 +13,24 @@ from usr.plugins.agentmemory.helpers.client import (
 class AgentMemoryInsights(Tool):
     """Higher-order derived knowledge from AgentMemory: synthesized
     insights, recurring cross-session patterns, and the project profile."""
+    # D11: declared native function-calling schema (schema source-of-truth).
+    native_schema = {
+    "type": "object",
+    "properties": {
+        "operation": {
+            "type": "string",
+            "description": "Operation to perform."
+        },
+        "limit": {
+            "type": "integer"
+        },
+        "query": {
+            "type": "string"
+        }
+    },
+    "additionalProperties": True
+}
+
 
     async def execute(self, operation="", **kwargs):
         operation = str(operation or "").strip().lower()

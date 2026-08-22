@@ -11,6 +11,36 @@ from usr.plugins.agentmemory.helpers.client import (
 
 class AgentMemoryRoutines(Tool):
     """Frozen workflows: named step sequences that materialize as actions."""
+    # D11: declared native function-calling schema (schema source-of-truth).
+    native_schema = {
+    "type": "object",
+    "properties": {
+        "operation": {
+            "type": "string",
+            "description": "Operation to perform."
+        },
+        "name": {
+            "type": "string"
+        },
+        "steps": {
+            "type": "string"
+        },
+        "description": {
+            "type": "string"
+        },
+        "limit": {
+            "type": "integer"
+        },
+        "routine_id": {
+            "type": "string"
+        },
+        "initiated_by": {
+            "type": "string"
+        }
+    },
+    "additionalProperties": True
+}
+
 
     async def execute(self, operation="", **kwargs):
         operation = str(operation or "").strip().lower()

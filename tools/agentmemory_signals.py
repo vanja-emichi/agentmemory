@@ -12,6 +12,47 @@ from usr.plugins.agentmemory.helpers.client import (
 
 class AgentMemorySignals(Tool):
     """Inter-agent signals: send, read, threads."""
+    # D11: declared native function-calling schema (schema source-of-truth).
+    native_schema = {
+    "type": "object",
+    "properties": {
+        "operation": {
+            "type": "string",
+            "description": "Operation to perform. One of: read, send, threads.",
+            "enum": [
+                "read",
+                "send",
+                "threads"
+            ]
+        },
+        "content": {
+            "type": "string"
+        },
+        "to": {
+            "type": "string"
+        },
+        "type": {
+            "type": "string"
+        },
+        "reply_to": {
+            "type": "string"
+        },
+        "agent_id": {
+            "type": "string"
+        },
+        "unread_only": {
+            "type": "boolean"
+        },
+        "thread_id": {
+            "type": "string"
+        },
+        "limit": {
+            "type": "integer"
+        }
+    },
+    "additionalProperties": True
+}
+
 
     async def execute(self, operation="", **kwargs):
         operation = str(operation or "").strip().lower()

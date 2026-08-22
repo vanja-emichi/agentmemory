@@ -10,6 +10,31 @@ from usr.plugins.agentmemory.helpers.client import (
 
 class AgentMemorySketches(Tool):
     """Ephemeral scratch graphs for planning (auto-expiring)."""
+    # D11: declared native function-calling schema (schema source-of-truth).
+    native_schema = {
+    "type": "object",
+    "properties": {
+        "operation": {
+            "type": "string",
+            "description": "Operation to perform. One of: create, list.",
+            "enum": [
+                "create",
+                "list"
+            ]
+        },
+        "title": {
+            "type": "string"
+        },
+        "description": {
+            "type": "string"
+        },
+        "limit": {
+            "type": "integer"
+        }
+    },
+    "additionalProperties": True
+}
+
 
     async def execute(self, operation="", **kwargs):
         operation = str(operation or "").strip().lower()

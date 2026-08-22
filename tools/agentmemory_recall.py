@@ -17,6 +17,42 @@ class AgentMemoryRecall(Tool):
     """Deep historical lookups into AgentMemory: unified smart search,
     file history, session observations, timeline traversal, and commit
     linkage."""
+    # D11: declared native function-calling schema (schema source-of-truth).
+    native_schema = {
+    "type": "object",
+    "properties": {
+        "operation": {
+            "type": "string",
+            "description": "Operation to perform."
+        },
+        "query": {
+            "type": "string"
+        },
+        "mode": {
+            "type": "string"
+        },
+        "limit": {
+            "type": "integer"
+        },
+        "path": {
+            "type": "string"
+        },
+        "session_id": {
+            "type": "string"
+        },
+        "anchor": {
+            "type": "string"
+        },
+        "sha": {
+            "type": "string"
+        },
+        "node_type": {
+            "type": "string"
+        }
+    },
+    "additionalProperties": True
+}
+
 
     async def execute(self, operation="", **kwargs):
         operation = str(operation or "").strip().lower()
